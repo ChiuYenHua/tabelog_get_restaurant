@@ -21,11 +21,11 @@ class Tabelog():
         request_html = requests.get(f'{self.base_html}{place}/').text
 
         # Restaurant type shown by upper picutre in website
-        upper_regex =  r'<a class="index-pickup__target" href="https://tabelog.com/tw/tokyo/rstLst/([^<]+)/"><span class="index-pickup__target-inner">([^<]+)</span></a>'
+        upper_regex =  fr'<a class="index-pickup__target" href="https://tabelog.com/tw/{place}/rstLst/([^<]+)/"><span class="index-pickup__target-inner">([^<]+)</span></a>'
         upper_list = re.compile(upper_regex).findall(request_html)
 
         # Restaurant type shown by lower picutre in website
-        lower_regex = r'<a class="c-link-arrow" href="https://tabelog.com/tw/tokyo/rstLst/([^<]+)/"><span>([^<]+)</span></a>'
+        lower_regex = fr'<a class="c-link-arrow" href="https://tabelog.com/tw/{place}/rstLst/([^<]+)/"><span>([^<]+)</span></a>'
         lower_list = re.compile(lower_regex).findall(request_html)
 
         # Return all type
@@ -65,6 +65,18 @@ class Tabelog():
                 return True
             
         return False
+    
+    # # Fix double string problem,  from '"a"' to 'a', '123' to 123
+    # def __fix_double_string_problem(self):
+    #     try:
+    #         for key, value in self.restaurant_dict_to_write_file.items():
+    #             if 'chinese' not in key:
+    #                 for key,value in every_dict.items():
+    #                     every_dict[key] = value[1:-1]
+    #     except:
+    #         pass
+
+    #     return list_of_dict
 
     # Make json file of all restaurant info from 'place'
     def __get_all_restaurnat_info_by_place(self, restaurant_type):
@@ -82,6 +94,7 @@ class Tabelog():
             if self.__check_restaurant_contain_below_score(restaurant_info_by_type):
                 break
                 
+            # Concat to all restaurant by type list
             temp_info_by_type_collect_until_score_below += restaurant_info_by_type
             page += 1
         
@@ -93,8 +106,11 @@ class Tabelog():
 
     def multithreading_get_all_restaurnat_info_by_place(self):
         # Loop through all restaurant type (type if a set, ex. ('cake', '蛋糕')) (multithreading process)
-        thread = ThreadPool(50)
+        thread = ThreadPool(80)
         thread.map(self.__get_all_restaurnat_info_by_place, self.restaurant_type_list)
+
+        # Fix double string problem
+        # self.__fix_double_string_problem()
 
     # Write dict result into json file
     def write_result(self):
